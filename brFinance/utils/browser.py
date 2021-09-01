@@ -6,12 +6,13 @@ from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from fake_useragent import UserAgent
 
+DOWNLOAD_PATH = root = os.path.dirname(os.path.abspath(__file__)) + "/downloads"
 
 @dataclass
 class Browser:
 
     @staticmethod
-    def download_wait(path_to_downloads):
+    def download_wait(path_to_downloads: str=DOWNLOAD_PATH):
         """
         Waits all Chrome download files (.crdownload) in a folder be done before continues
         """
@@ -27,7 +28,7 @@ class Browser:
         return seconds
 
     @staticmethod
-    def run_chromedriver(hidden: bool=True) -> webdriver:
+    def run_chromedriver(hidden: bool=False) -> webdriver:
         """
         Instantiate a webdriver object with different settings depending of OS you are using
         """
@@ -36,7 +37,7 @@ class Browser:
         system = str(platform.system())
         
         if system == "Windows" or system == "Darwin":
-            # Options for windows
+            # Options for windows and MacOS
             options = webdriver.ChromeOptions()
             options.add_argument('--no-sandbox')
             if hidden:
@@ -47,7 +48,12 @@ class Browser:
             options.add_argument("--incognito")
             options.add_argument('user-agent={userAgent}'.format(userAgent=UserAgent().chrome))
             root = os.path.dirname(os.path.abspath(__file__))
-            prefs = {"download.default_directory": root + "/downloads"}
+            
+            try:
+                os.makedirs(DOWNLOAD_PATH)
+            except FileExistsError:
+                pass
+            prefs = {"download.default_directory": DOWNLOAD_PATH}
             options.add_experimental_option("prefs", prefs)
 
             driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
